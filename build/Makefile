@@ -15,7 +15,7 @@ CXXFLAGS=-stdlib=libc++ -std=c++11 -g -pthread -Wno-logical-op-parentheses
 
 # directories
 
-top=.
+top=..
 GTEST_DIR=$(top)/gtest-1.7.0
 
 vpath %.h $(top)/include
@@ -51,6 +51,6 @@ test_optionalm: test_optionalm.cc optionalm.h libgtestmain.a
 # run tests
 
 test: test_optionalm
-	$(top)/$<
+	./$<
 
 
