@@ -11,7 +11,7 @@ realclean: clean
 # compiler
 
 CXX=clang++
-CXXFLAGS=-stdlib=libc++ -std=c++11 -g -pthread -Wno-logical-op-parentheses
+CXXFLAGS=-stdlib=libc++ -std=c++11 -g -pthread
 
 # directories
 

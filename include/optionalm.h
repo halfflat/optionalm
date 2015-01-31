@@ -1,10 +1,18 @@
-/* Until we have std::optional (c++17?) ...
+/**
+ * \file optionalm.h
+ * \brief An option class with a monadic interface.
  *
- * Loosely follows a subset of the proposed functionality of N3672,
- * but doesn't provide any constexpr methods. 
+ * The std::option<T> class was proposed for inclusion into C++14, but was
+ * ultimately rejected. (See N3672 proposal for details.) This class offers
+ * similar functionality, namely a class that can represent a value (or
+ * reference), or nothing at all.
  *
- * Adds support for monadic-style operations with
- * operator>>, operator| and operator&.
+ * In addition, this class offers monadic and monoidal bindings, allowing
+ * the chaining of operations any one of which might represent failure with
+ * an unset optional value.
+ *
+ * One point of difference between the proposal N3672 and this implementation
+ * is the lack of constexpr versions of the methods and constructors.
  */
 
 #ifndef HF_OPTIONALM_H_
@@ -13,6 +21,9 @@
 #include <type_traits>
 #include <stdexcept>
 #include <utility>
+
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wlogical-op-parentheses"
 
 namespace hf {
 
@@ -415,5 +426,7 @@ operator&(A &&a,B &&b) {
 inline optional<void> provided(bool condition) { return condition?optional<void>(true):optional<void>(); }
 
 } // namespace hf
+
+#pragma clang diagnostic pop
 
 #endif // ndef HF_OPTIONALM_H_
