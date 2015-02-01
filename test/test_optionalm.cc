@@ -59,6 +59,11 @@ TEST(optionalm,deref) {
     EXPECT_EQ(2,(*f).a);
 }
 
+TEST(optionalm,ctor_conv) {
+    optional<std::array<int,3>> x{{1,2,3}};
+    EXPECT_EQ(3,x->size());
+}
+
 TEST(optionalm,ctor_ref) {
     int v=10;
     optional<int &> a(v);
@@ -91,6 +96,8 @@ struct nomove {
     nomove(const nomove &n): value(n.value) {}
     nomove(nomove &&n) = delete;
 
+    nomove &operator=(const nomove &n) { value=n.value; return *this; }
+
     bool operator==(const nomove &them) const { return them.value==value; }
     bool operator!=(const nomove &them) const { return !(*this==them); }
 };
@@ -118,6 +125,13 @@ struct nocopy {
         n.value=0;
     }
 
+    nocopy &operator=(const nocopy &n) = delete;
+    nocopy &operator=(nocopy &&n) {
+        value=n.value;
+        n.value=-1;
+        return *this;
+    }
+
     bool operator==(const nocopy &them) const { return them.value==value; }
     bool operator!=(const nocopy &them) const { return !(*this==them); }
 };
@@ -126,7 +140,7 @@ TEST(optionalm,ctor_nocopy) {
     optional<nocopy> a(nocopy(5));
     EXPECT_EQ(nocopy(5),a.get());
 
-    optional<nocopy> b=std::move(a);
+    optional<nocopy> b(std::move(a));
     EXPECT_EQ(nocopy(5),b.get());
     EXPECT_EQ(0,a.get().value);
 
@@ -288,4 +302,3 @@ TEST(optionalm,provided) {
     EXPECT_EQ(-1,rs[1]);
     EXPECT_EQ(4,rs[2]);
 }
-
