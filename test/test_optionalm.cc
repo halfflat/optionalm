@@ -230,6 +230,29 @@ TEST(optionalm,bind_to_optional_void) {
     EXPECT_EQ(0,count);
 }
 
+TEST(optionalm,bind_with_ref) {
+    optional<int> a=10;
+    a >> [](int &v) {++v; };
+    EXPECT_EQ(11,*a);
+}
+
+struct check_cref {
+    int operator()(const int &) { return 10; }
+    int operator()(int &) { return 11; }
+};
+
+TEST(optionalm,bind_constness) {
+    check_cref checker;
+    optional<int> a=1;
+    int v=*(a >> checker);
+    EXPECT_EQ(11,v);
+
+    const optional<int> b=1;
+    v=*(b >> checker);
+    EXPECT_EQ(10,v);
+}
+
+
 TEST(optionalm,conversion) {
     optional<double> a(3),b=5;
     EXPECT_TRUE((bool)a);

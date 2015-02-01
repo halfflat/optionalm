@@ -76,7 +76,7 @@ namespace detail {
         template <typename F>
         typename std::result_of<F(reference_type)>::type apply(F &&f) { return f(ref()); }
         template <typename F>
-        typename std::result_of<F(const_reference_type)>::type apply(F &&f) const { return f(ref()); }
+        typename std::result_of<F(const_reference_type)>::type apply(F &&f) const { return f(cref()); }
     };
 
     template <typename X>
@@ -100,7 +100,7 @@ namespace detail {
         template <typename F>
         typename std::result_of<F(reference_type)>::type apply(F &&f) { return f(ref()); }
         template <typename F>
-        typename std::result_of<F(const_reference_type)>::type apply(F &&f) const { return f(ref()); }
+        typename std::result_of<F(const_reference_type)>::type apply(F &&f) const { return f(cref()); }
     };
 
     struct optional_void_data {
