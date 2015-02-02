@@ -1,18 +1,17 @@
-/**
- * \file optionalm.h
- * \brief An option class with a monadic interface.
+/*! \file optionalm.h
+ *  \brief An option class with a monadic interface.
  *
- * The std::option<T> class was proposed for inclusion into C++14, but was
- * ultimately rejected. (See N3672 proposal for details.) This class offers
- * similar functionality, namely a class that can represent a value (or
- * reference), or nothing at all.
+ *  The std::option<T> class was proposed for inclusion into C++14, but was
+ *  ultimately rejected. (See N3672 proposal for details.) This class offers
+ *  similar functionality, namely a class that can represent a value (or
+ *  reference), or nothing at all.
  *
- * In addition, this class offers monadic and monoidal bindings, allowing
- * the chaining of operations any one of which might represent failure with
- * an unset optional value.
+ *  In addition, this class offers monadic and monoidal bindings, allowing
+ *  the chaining of operations any one of which might represent failure with
+ *  an unset optional value.
  *
- * One point of difference between the proposal N3672 and this implementation
- * is the lack of constexpr versions of the methods and constructors.
+ *  One point of difference between the proposal N3672 and this implementation
+ *  is the lack of constexpr versions of the methods and constructors.
  */
 
 #ifndef HF_OPTIONALM_H_
@@ -21,6 +20,8 @@
 #include <type_traits>
 #include <stdexcept>
 #include <utility>
+
+#include "uninitialized.h"
 
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wlogical-op-parentheses"
@@ -54,6 +55,7 @@ namespace detail {
 
     template <typename X> struct wrapped_type { typedef typename wrapped_type_<typename std::decay<X>::type,X>::type type; };
 
+#if 0
     template <typename X>
     struct optional_value_data {
         typename std::aligned_storage<sizeof(X),alignof(X)>::type data;
@@ -122,11 +124,15 @@ namespace detail {
         template <typename F>
         typename std::result_of<F()>::type apply(F &&f) const { return f(); }
     };
-
-    template <typename D>
+#endif
+    template <typename X>
     struct optional_base: detail::optional_tag {
-        template <typename X> friend struct optional;
+        template <typename Y> friend struct optional;
 
+    protected:
+        typedef hf::uninitialized<X> D;
+
+    public:
         typedef typename D::reference_type reference_type;
         typedef typename D::const_reference_type const_reference_type;
         typedef typename D::pointer_type pointer_type;
@@ -219,8 +225,8 @@ namespace detail {
 }
 
 template <typename X>
-struct optional: detail::optional_base<detail::optional_value_data<X>> {
-    typedef detail::optional_base<detail::optional_value_data<X>> base;
+struct optional: detail::optional_base<X> {
+    typedef detail::optional_base<X> base;
     using base::set;
     using base::ref;
     using base::reset;
@@ -284,8 +290,8 @@ struct optional: detail::optional_base<detail::optional_value_data<X>> {
 };
 
 template <typename X>
-struct optional<X &>: detail::optional_base<detail::optional_ref_data<X>> {
-    typedef detail::optional_base<detail::optional_ref_data<X>> base;
+struct optional<X &>: detail::optional_base<X &> {
+    typedef detail::optional_base<X &> base;
     using base::set;
     using base::ref;
     using base::data;
@@ -316,8 +322,8 @@ struct optional<X &>: detail::optional_base<detail::optional_ref_data<X>> {
  * binding to a void function */
 
 template <>
-struct optional<void>: detail::optional_base<detail::optional_void_data> {
-    typedef detail::optional_base<detail::optional_void_data> base;
+struct optional<void>: detail::optional_base<void> {
+    typedef detail::optional_base<void> base;
     using base::set;
 
     optional(): base() {}
