@@ -53,15 +53,18 @@ TEST(uninitialized,ctor_nomove) {
     nomove::reset_counts();
 
     uninitialized<nomove> ua;
-    ua.construct(nomove{});
+    ua.construct(nomove{}); // check against rvalue
 
-    EXPECT_EQ(1,nomove::copy_ctor_count);
+    nomove b;
+    ua.construct(b); // check against non-const lvalue
+
+    EXPECT_EQ(2,nomove::copy_ctor_count);
     EXPECT_EQ(0,nomove::copy_assign_count);
 
     nomove a;
     ua.ref()=a;
 
-    EXPECT_EQ(1,nomove::copy_ctor_count);
+    EXPECT_EQ(2,nomove::copy_ctor_count);
     EXPECT_EQ(1,nomove::copy_assign_count);
 }
 

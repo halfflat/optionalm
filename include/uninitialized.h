@@ -58,13 +58,9 @@ public:
     template <typename Y=X,typename =typename std::enable_if<std::is_copy_constructible<Y>::value>::type>
     void construct(const X &x) { new(&data) X(x); }
 
-    //! Move construct the value.
-    template <typename Y=X,typename =typename std::enable_if<std::is_move_constructible<Y>::value>::type>
-    void construct(X &&x) { new(&data) X(std::move(x)); }
-
     //! General constructor
     template <typename... Y,typename =typename std::enable_if<std::is_constructible<X,Y...>::value>::type>
-    void construct(Y&& ...args) { new(&data) X(std::forward<Y...>(args...)); }
+    void construct(Y&& ...args) { new(&data) X(std::forward<Y>(args)...); }
 
     //! Call the destructor of the value.
     void destruct() { ptr()->~X(); }
