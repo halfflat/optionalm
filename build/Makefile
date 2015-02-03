@@ -1,6 +1,6 @@
 .PHONY: clean all realclean test
 
-all: test_optionalm
+all: test_optionalm test_uninitialized
 
 clean:
 	rm -f gtest-all.o gtest_main.o
@@ -48,9 +48,14 @@ test_optionalm: LDLIBS+=-L. -lgtestmain
 test_optionalm: test_optionalm.cc optionalm.h uninitialized.h libgtestmain.a
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS) 
 
+test_uninitialized: CPPFLAGS+=-I$(top)/include
+test_uninitialized: LDLIBS+=-L. -lgtestmain
+test_uninitialized: test_uninitialized.cc uninitialized.h libgtestmain.a
+	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS) 
+#
 # run tests
 
-test: test_optionalm
-	./$<
+test: test_optionalm test_uninitialized
+	for test in $^; do ./$$test; done
 
 

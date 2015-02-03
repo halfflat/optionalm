@@ -28,9 +28,6 @@ namespace hf {
  *
  *  \tparam X
  *      The wrapped value type.
- *  \todo
- *  Possibly replace the <tt>construct</tt> calls with a
- *  perfect forwarding constructor.
  */
 template <typename X>
 struct uninitialized {
@@ -58,9 +55,16 @@ public:
     const_reference_type cref() const { return *reinterpret_cast<const X *>(&data); }
 
     //! Copy construct the value.
+    template <typename Y=X,typename =typename std::enable_if<std::is_copy_constructible<Y>::value>::type>
     void construct(const X &x) { new(&data) X(x); }
+
     //! Move construct the value.
+    template <typename Y=X,typename =typename std::enable_if<std::is_move_constructible<Y>::value>::type>
     void construct(X &&x) { new(&data) X(std::move(x)); }
+
+    //! General constructor
+    template <typename... Y,typename =typename std::enable_if<std::is_constructible<X,Y...>::value>::type>
+    void construct(Y&& ...args) { new(&data) X(std::forward<Y...>(args...)); }
 
     //! Call the destructor of the value.
     void destruct() { ptr()->~X(); }
