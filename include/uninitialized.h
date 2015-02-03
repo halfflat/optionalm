@@ -67,10 +67,10 @@ public:
 
     //! Apply the one-parameter functor F to the value by reference.
     template <typename F>
-        typename std::result_of<F(reference_type)>::type apply(F &&f) { return f(ref()); }
+    typename std::result_of<F(reference_type)>::type apply(F &&f) { return f(ref()); }
     //! Apply the one-parameter functor F to the value by const reference.
     template <typename F>
-        typename std::result_of<F(const_reference_type)>::type apply(F &&f) const { return f(cref()); }
+    typename std::result_of<F(const_reference_type)>::type apply(F &&f) const { return f(cref()); }
 };
 
 /*! \brief Maintains storage for a pointer of type X, representing
@@ -111,10 +111,10 @@ public:
 
     //! Apply the one-parameter functor F to the value by reference.
     template <typename F>
-        typename std::result_of<F(reference_type)>::type apply(F &&f) { return f(ref()); }
+    typename std::result_of<F(reference_type)>::type apply(F &&f) { return f(ref()); }
     //! Apply the one-parameter functor F to the value by const reference.
     template <typename F>
-        typename std::result_of<F(const_reference_type)>::type apply(F &&f) const { return f(cref()); }
+    typename std::result_of<F(const_reference_type)>::type apply(F &&f) const { return f(cref()); }
 };
 
 /*! \brief Wrap a void type in an uninitialized template.
