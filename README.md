@@ -20,6 +20,7 @@ is the lack of constexpr versions of the methods and constructors.
 An optional<T> value can be in one of two states: it can be _set_, where it
 encapsulates a value of type T, or _unset_. In a boolean context, set
 optional values are true, and unset ones are false.
+```C++
     // Default constructed optional<int> is unset.
     optional<int> a;
     assert((bool)a==false);
@@ -27,17 +28,18 @@ optional values are true, and unset ones are false.
     // Given a value, optional<T> is true in a boolean context.
     optional<int> b(3);
     assert((bool)b==true)
-
+```
 The associated value can be retrieved using the get() method (which throws
 an exception if unset), or via operator\*() or operator->(), which do not
 check for validity.
+```C++
     optional<int> a(3);
     assert(3==a.get());
     assert(3==*a);
-
+    
     optional<array<int,3>> x{{1,2,3}};
     cout << x->size() << "\n";
-
+```
 A chain of computations can be performed on an optional value, conditional
 on that value being set. The bind method takes a functor and applies it
 if the optional value is set, or returns an unset optional value if not.
