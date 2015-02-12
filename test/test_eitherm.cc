@@ -75,8 +75,28 @@ TEST(eitherm,ctor_implicit_move) {
     ASSERT_EQ(2,K.n_move_ctor);
 }
 
-TEST(eitherm,ctor_ref) {
-    FAIL() << "unimplemented test";
+TEST(eitherm,ctor_ref_explicit_field) {
+    typedef either<int &,double>  e_intref_double;
+
+    int a=10;
+    double b=20.0;
+
+    e_intref_double e1(in_place_field_t<0>{},a);
+    e_intref_double e2(in_place_field_t<1>{},d);
+
+    ASSERT_EQ(10,e1.unsafe_get<0>());
+    ASSERT_EQ(20.0,e2.unsafe_get<1>());
+
+    e1.unsafe_get<0>()=11;
+    ASSERT_EQ(11,a);
+
+    int &ir=e1.unsafe_get<0>();
+    ir=12;
+    ASSERT_EQ(12,a);
+
+    double &dr=e2.unsafe_get<1>();
+    dr=21.0;
+    ASSERT_EQ(20.0,b);
 }
     
 TEST(eitherm,ptr) {
