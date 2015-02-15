@@ -28,22 +28,22 @@ struct either_invalid_get: public std::runtime_error {
     either_invalid_get(): either_invalid_get("get on unset either field") {}
 };
 
-template <typename A,typename B,typename... X>
-struct either_constructible {
-private:
-    enum { is_a_constructible=std::is_constructible<A,X...>::value };
-    enum { is_b_constructible=std::is_constructible<B,X...>::value };
-public:
-    enum { value=(is_a_constructible^is_b_constructible) };
-    enum { which=is_a_constructible?0:1 };
-};
-
 template <typename A,typename B>
 struct either_data {
     union {
         uninitialized<A> ua;
         uninitialized<B> ub;
     } data;
+};
+
+template <typename A,typename B,typename... X>
+struct either_constructible {
+private:
+    enum { is_a_constructible=uninitialized_can_construct<A,X...>::value };
+    enum { is_b_constructible=uninitialized_can_construct<B,X...>::value };
+public:
+    enum { value=(is_a_constructible^is_b_constructible) };
+    enum { which=is_a_constructible?0:1 };
 };
 
 template <std::size_t,typename A,typename B>
@@ -103,22 +103,16 @@ struct either: either_data<A,B> {
 
     // implicit copy/move construction relies on A and B being distinct
 
-    template <typename Y=A,typename =typename std::enable_if<ab_distinct && std::is_copy_constructible<Y>::value>::type>
-    either(const A &a): which(0) { data.ua.construct(a); }
+    template <typename Y,typename P=either_constructible<A,B,Y>,
+              typename =typename std::enable_if<P::value>::type>
+    either(Y &&a): which(P::which) { either_select<P::which,A,B>::field(*this).construct(std::forward<Y>(a)); }
 
-    template <typename Y=A,typename =typename std::enable_if<ab_distinct && std::is_move_constructible<Y>::value>::type>
-    either(A &&a): which(0) { data.ua.construct(std::move(a)); }
-
-    template <typename Y=B,typename =typename std::enable_if<ab_distinct && std::is_copy_constructible<Y>::value>::type>
-    either(const B &b): which(1) { data.ub.construct(b); }
-
-    template <typename Y=B,typename =typename std::enable_if<ab_distinct && std::is_move_constructible<Y>::value>::type>
-    either(B &&b): which(1) { data.ub.construct(std::move(b)); }
-
-    template <typename... X,typename =typename std::enable_if<std::is_constructible<A,X...>::value>::type>
+    template <typename... X,typename =typename std::enable_if<
+        uninitialized_can_construct<A,X...>::value>::type>
     either(in_place_field_t<0>,X&&...x): which(0) { data.ua.construct(std::forward<X>(x)...); }
 
-    template <typename... X,typename =typename std::enable_if<std::is_constructible<B,X...>::value>::type>
+    template <typename... X,typename =typename std::enable_if<
+        uninitialized_can_construct<B,X...>::value>::type>
     either(in_place_field_t<1>,X&&...x): which(1) { data.ub.construct(std::forward<X>(x)...); }
 
     template <typename... X,typename =typename std::enable_if<either_constructible<A,B,X...>::value>::type>

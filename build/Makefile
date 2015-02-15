@@ -13,7 +13,12 @@ realclean: clean
 # compiler
 
 CXX=clang++
-CXXFLAGS=-stdlib=libc++ -std=c++11 -g -pthread
+#CXX=g++
+
+CXXFLAGS=-std=c++11 -g -pthread
+ifeq ($(CXX),clang++)
+CXXFLAGS+=-stdlib=libc++
+endif
 
 # directories
 
@@ -59,7 +64,7 @@ test_uninitialized: CPPFLAGS+=-I$(top)/include
 test_uninitialized: LDLIBS+=-L. -lgtestmain
 test_uninitialized: test_uninitialized.cc uninitialized.h libgtestmain.a
 	$(CXX) $(CXXFLAGS) $(CPPFLAGS) -o $@ $< $(LDFLAGS) $(LDLIBS) 
-#
+
 # run tests
 
 test: test_eitherm test_optionalm test_uninitialized

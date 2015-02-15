@@ -73,6 +73,8 @@ public:
     typename std::result_of<F(const_reference_type)>::type apply(F &&f) const { return f(cref()); }
 };
 
+
+
 /*! \brief Maintains storage for a pointer of type X, representing
  *  a possibly uninitialized reference.
  *
@@ -153,6 +155,18 @@ struct uninitialized<void> {
     template <typename F>
     typename std::result_of<F()>::type apply(F &&f) const { return f(); }
 };
+
+template <typename...>
+struct uninitialized_can_construct: std::false_type {};
+
+template <typename X,typename... Y>
+struct uninitialized_can_construct<X,Y...>: std::integral_constant<bool,std::is_constructible<X,Y...>::value> {};
+
+template <typename X,typename Y>
+struct uninitialized_can_construct<X &,Y>: std::integral_constant<bool,std::is_convertible<X &,Y>::value> {};
+
+template <typename... Y>
+struct uninitialized_can_construct<void,Y...>: std::true_type {};
 
 /*! \} */
 

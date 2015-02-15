@@ -82,7 +82,7 @@ TEST(eitherm,ctor_ref_explicit_field) {
     double b=20.0;
 
     e_intref_double e1(in_place_field_t<0>{},a);
-    e_intref_double e2(in_place_field_t<1>{},d);
+    e_intref_double e2(in_place_field_t<1>{},b);
 
     ASSERT_EQ(10,e1.unsafe_get<0>());
     ASSERT_EQ(20.0,e2.unsafe_get<1>());
@@ -100,5 +100,10 @@ TEST(eitherm,ctor_ref_explicit_field) {
 }
     
 TEST(eitherm,ptr) {
-    FAIL() << "unimplemented test";
+    struct A { int foo() const { return 3; } };
+    struct B { int foo() const { return 4; } };
+
+    either<A,B> e1(B{}),e2{A{}};
+    ASSERT_EQ(nullptr,e1.ptr<0>());
+    ASSERT_EQ(nullptr,e2.ptr<1>());
 }
