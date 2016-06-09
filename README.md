@@ -60,20 +60,16 @@ if the optional value is set, or returns an unset optional value if not.
 More examples can be found in the existin tests, with better documentation
 to come.
 
-## unitialized<T>
+## `uninitialized<T>`
 
-The `optional<T>` class is built upon `unitialized<T>`, which represents
+The `optional<T>` class is built upon `uninitialized<T>`, which represents
 storage space for an object of type `T` which may or may not be initialized.
 `T` may also be a reference type or `void`.
 
 For now, refer to the source code for documentation.
 
-## either<T>
+## `either<T>`
 
 `either<T>` is still in development; the intention is to implement a
 type safe variant class with monadic semantics.
-
-
-
-
 
