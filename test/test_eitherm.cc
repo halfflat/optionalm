@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "eitherm.h"
+#include <optionalm/eitherm.h>
 
-using namespace hf;
+using namespace hf::optionalm;
 
 TEST(eitherm,ctor_explicit_field) {
     either<int,const char *> e1(in_place_field_t<0>{},7);
