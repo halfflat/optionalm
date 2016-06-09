@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
 
-#include "uninitialized.h"
+#include <optionalm/uninitialized.h>
 
-using namespace hf;
+using namespace hf::optionalm;
 
 struct count_ops {
     count_ops() {}

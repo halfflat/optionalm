@@ -3,7 +3,7 @@ Include-only library for C++ option types with monadic bindings.
 
 ## Overview
 
-The std::option<T> class was proposed for inclusion into C++14, but was
+The `std::option<T>` class was proposed for inclusion into C++14, but was
 ultimately rejected. (See N3672 proposal for details.) This class offers
 similar functionality, namely a class that can represent a value (or
 reference), or nothing at all.
@@ -17,8 +17,8 @@ is the lack of constexpr versions of the methods and constructors.
 
 ## Usage
 
-An optional<T> value can be in one of two states: it can be _set_, where it
-encapsulates a value of type T, or _unset_. In a boolean context, set
+An `optional<T>` value can be in one of two states: it can be _set_, where it
+encapsulates a value of type `T`, or _unset_. In a boolean context, set
 optional values are true, and unset ones are false.
 ```C++
     // Default constructed optional<int> is unset.
@@ -30,7 +30,7 @@ optional values are true, and unset ones are false.
     assert((bool)b==true)
 ```
 The associated value can be retrieved using the get() method (which throws
-an exception if unset), or via operator\*() or operator->(), which do not
+an exception if unset), or via `operator\*()` or `operator->()`, which do not
 check for validity.
 ```C++
     optional<int> a(3);
@@ -43,6 +43,33 @@ check for validity.
 A chain of computations can be performed on an optional value, conditional
 on that value being set. The bind method takes a functor and applies it
 if the optional value is set, or returns an unset optional value if not.
+```C++
+    optional<double> sqrtm(int i) {
+        if (i<0) return nothing;
+        else return std::sqrt(i);
+    }
 
-       
+    
+    double accum=0;
+
+    // ...
+    optional<int> x=pop_stack();
+    x >> sqrtm >> [](double x) { accum+=x; };
+```
+
+More examples can be found in the existin tests, with better documentation
+to come.
+
+## `uninitialized<T>`
+
+The `optional<T>` class is built upon `uninitialized<T>`, which represents
+storage space for an object of type `T` which may or may not be initialized.
+`T` may also be a reference type or `void`.
+
+For now, refer to the source code for documentation.
+
+## `either<T>`
+
+`either<T>` is still in development; the intention is to implement a
+type safe variant class with monadic semantics.
 

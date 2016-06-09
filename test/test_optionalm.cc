@@ -3,9 +3,9 @@
 #include <algorithm>
 #include <gtest/gtest.h>
 
-#include "optionalm.h"
+#include <optionalm/optionalm.h>
 
-using namespace hf;
+using namespace hf::optionalm;
 
 TEST(optionalm,ctors) {
     optional<int> a,b(3),c=b,d=4;
