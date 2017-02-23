@@ -2,142 +2,96 @@
 
 #include <optionalm/uninitialized.h>
 
+#include "test_common.h"
+
 using namespace hf::optionalm;
 
-struct count_ops {
-    count_ops() {}
-    count_ops(const count_ops &n) { ++copy_ctor_count; }
-    count_ops(count_ops &&n) { ++move_ctor_count; }
+TEST(uninitialized, ctor) {
+    using count=testing::ctor_count<char>;
+    count::reset_counts();
 
-    count_ops &operator=(const count_ops &n) { ++copy_assign_count; return *this; }
-    count_ops &operator=(count_ops &&n) { ++move_assign_count; return *this; }
+    uninitialized<count> ua;
+    ua.construct(count{});
 
-    static int copy_ctor_count,copy_assign_count;
-    static int move_ctor_count,move_assign_count;
-    static void reset_counts() {
-        copy_ctor_count=copy_assign_count=0; 
-        move_ctor_count=move_assign_count=0;
-    }
-};
-
-int count_ops::copy_ctor_count=0;
-int count_ops::copy_assign_count=0;
-int count_ops::move_ctor_count=0;
-int count_ops::move_assign_count=0;
-
-TEST(uninitialized,ctor) {
-    count_ops::reset_counts();
-
-    uninitialized<count_ops> ua;
-    ua.construct(count_ops{});
-
-    count_ops b;
+    count b;
     ua.construct(b);
 
-    EXPECT_EQ(1,count_ops::copy_ctor_count);
-    EXPECT_EQ(0,count_ops::copy_assign_count);
-    EXPECT_EQ(1,count_ops::move_ctor_count);
-    EXPECT_EQ(0,count_ops::move_assign_count);
+    EXPECT_EQ(1, count::copy_ctor_count);
+    EXPECT_EQ(0, count::copy_assign_count);
+    EXPECT_EQ(1, count::move_ctor_count);
+    EXPECT_EQ(0, count::move_assign_count);
 
-    ua.ref()=count_ops{};
+    ua.ref()=count{};
     ua.ref()=b;
 
-    EXPECT_EQ(1,count_ops::copy_ctor_count);
-    EXPECT_EQ(1,count_ops::copy_assign_count);
-    EXPECT_EQ(1,count_ops::move_ctor_count);
-    EXPECT_EQ(1,count_ops::move_assign_count);
+    EXPECT_EQ(1, count::copy_ctor_count);
+    EXPECT_EQ(1, count::copy_assign_count);
+    EXPECT_EQ(1, count::move_ctor_count);
+    EXPECT_EQ(1, count::move_assign_count);
 }
 
-struct nocopy {
-    nocopy() {}
-    nocopy(const nocopy &n) = delete;
-    nocopy(nocopy &&n) { ++move_ctor_count; }
+TEST(uninitialized, ctor_nocopy) {
+    using no_copy=testing::no_copy<int>;
+    no_copy::reset_counts();
 
-    nocopy &operator=(const nocopy &n) = delete;
-    nocopy &operator=(nocopy &&n) { ++move_assign_count; return *this; }
+    uninitialized<no_copy> ua;
+    ua.construct(no_copy{});
 
-    static int move_ctor_count,move_assign_count;
-    static void reset_counts() { move_ctor_count=move_assign_count=0; }
-};
+    EXPECT_EQ(1, no_copy::move_ctor_count);
+    EXPECT_EQ(0, no_copy::move_assign_count);
 
-int nocopy::move_ctor_count=0;
-int nocopy::move_assign_count=0;
+    ua.ref()=no_copy{};
 
-TEST(uninitialized,ctor_nocopy) {
-    nocopy::reset_counts();
-
-    uninitialized<nocopy> ua;
-    ua.construct(nocopy{});
-
-    EXPECT_EQ(1,nocopy::move_ctor_count);
-    EXPECT_EQ(0,nocopy::move_assign_count);
-
-    ua.ref()=nocopy{};
-
-    EXPECT_EQ(1,nocopy::move_ctor_count);
-    EXPECT_EQ(1,nocopy::move_assign_count);
+    EXPECT_EQ(1, no_copy::move_ctor_count);
+    EXPECT_EQ(1, no_copy::move_assign_count);
 }
 
-struct nomove {
-    nomove() {}
-    nomove(const nomove &n) { ++copy_ctor_count; }
-    nomove(nomove &&n) = delete;
+TEST(uninitialized, ctor_nomove) {
+    using no_move=testing::no_move<int>;
+    no_move::reset_counts();
 
-    nomove &operator=(const nomove &n) { ++copy_assign_count; return *this; }
-    nomove &operator=(nomove &&n) = delete;
+    uninitialized<no_move> ua;
+    ua.construct(no_move{}); // check against rvalue
 
-    static int copy_ctor_count,copy_assign_count;
-    static void reset_counts() { copy_ctor_count=copy_assign_count=0; }
-};
-
-int nomove::copy_ctor_count=0;
-int nomove::copy_assign_count=0;
-
-TEST(uninitialized,ctor_nomove) {
-    nomove::reset_counts();
-
-    uninitialized<nomove> ua;
-    ua.construct(nomove{}); // check against rvalue
-
-    nomove b;
+    no_move b;
     ua.construct(b); // check against non-const lvalue
 
-    const nomove c;
+    const no_move c;
     ua.construct(c); // check against const lvalue
 
-    EXPECT_EQ(3,nomove::copy_ctor_count);
-    EXPECT_EQ(0,nomove::copy_assign_count);
+    EXPECT_EQ(3, no_move::copy_ctor_count);
+    EXPECT_EQ(0, no_move::copy_assign_count);
 
-    nomove a;
+    no_move a;
     ua.ref()=a;
 
-    EXPECT_EQ(3,nomove::copy_ctor_count);
-    EXPECT_EQ(1,nomove::copy_assign_count);
+    EXPECT_EQ(3, no_move::copy_ctor_count);
+    EXPECT_EQ(1, no_move::copy_assign_count);
 }
 
-TEST(uninitialized,void) {
-    uninitialized<void> a,b;
+TEST(uninitialized, void) {
+    uninitialized<void> a, b;
     a=b;
 
-    EXPECT_EQ(typeid(a.ref()),typeid(void));
+    EXPECT_EQ(typeid(a.ref()), typeid(void));
 }
 
-TEST(uninitialized,ref) {
-    uninitialized<int &> x,y;
+TEST(uninitialized, ref) {
+    uninitialized<int &> x, y;
     int a;
 
     x.construct(a);
     y=x;
 
     x.ref()=2;
-    EXPECT_EQ(2,a);
+    EXPECT_EQ(2, a);
 
     y.ref()=3;
-    EXPECT_EQ(3,a);
-    EXPECT_EQ(3,x.cref());
+    EXPECT_EQ(3, a);
+    EXPECT_EQ(3, x.cref());
 
-    EXPECT_EQ(&a,x.ptr());
-    EXPECT_EQ((const int *)&a,x.cptr());
+    EXPECT_EQ(&a, x.ptr());
+    EXPECT_EQ((const int *)&a, x.cptr());
 }
 
 struct apply_tester {
@@ -148,45 +102,45 @@ struct apply_tester {
     int operator()(int &a) const { ++op_count; return ++a; }
 };
 
-TEST(uninitialized,apply) {
+TEST(uninitialized, apply) {
     uninitialized<int> ua;
     ua.construct(10);
 
     apply_tester A;
     int r=ua.apply(A);
-    EXPECT_EQ(11,ua.cref());
-    EXPECT_EQ(11,r);
+    EXPECT_EQ(11, ua.cref());
+    EXPECT_EQ(11, r);
 
     uninitialized<int &> ub;
     ub.construct(ua.ref());
 
     r=ub.apply(A);
-    EXPECT_EQ(12,ua.cref());
-    EXPECT_EQ(12,r);
+    EXPECT_EQ(12, ua.cref());
+    EXPECT_EQ(12, r);
 
     uninitialized<const int &> uc;
     uc.construct(ua.ref());
 
     r=uc.apply(A);
-    EXPECT_EQ(12,ua.cref());
-    EXPECT_EQ(13,r);
+    EXPECT_EQ(12, ua.cref());
+    EXPECT_EQ(13, r);
 
     const uninitialized<int> ud(ua);
 
     r=ud.apply(A);
-    EXPECT_EQ(12,ua.cref());
-    EXPECT_EQ(12,ud.cref());
-    EXPECT_EQ(13,r);
+    EXPECT_EQ(12, ua.cref());
+    EXPECT_EQ(12, ud.cref());
+    EXPECT_EQ(13, r);
 
-    EXPECT_EQ(2,A.op_count);
-    EXPECT_EQ(2,A.const_op_count);
+    EXPECT_EQ(2, A.op_count);
+    EXPECT_EQ(2, A.const_op_count);
 }
 
-TEST(uninitialized,void_apply) {
+TEST(uninitialized, void_apply) {
     uninitialized<void> uv;
 
     auto f=[]() { return 11; };
-    EXPECT_EQ(11,uv.apply(f));
+    EXPECT_EQ(11, uv.apply(f));
 
-    EXPECT_EQ(12.5,uv.apply([]() { return 12.5; }));
+    EXPECT_EQ(12.5, uv.apply([]() { return 12.5; }));
 }
