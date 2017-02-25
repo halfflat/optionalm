@@ -8,7 +8,6 @@
 #include <optionalm/uninitialized.h>
 
 namespace hf {
-namespace optionalm {
 
 struct bad_either_access: public std::runtime_error {
     explicit bad_either_access(const std::string &what_str): std::runtime_error(what_str) {}
@@ -79,6 +78,24 @@ namespace detail {
         }
     };
 
+    template <typename X>
+    struct ref_adaptor {
+        static const X& from_ref(const X& x) { return x; }
+        static X& from_ref(X& x) { return x; }
+        static const X& to_ref(const X& x) { return x; }
+        static X& to_ref(X& x) { return x; }
+        static X&& to_ref(X&& x) { return std::move(x); }
+        static X&& move(X& x) { return std::move(x); }
+    };
+
+    template <typename X>
+    struct ref_adaptor<X&> {
+        static X* from_ref(const X& x) { return const_cast<X*>(&x); }
+        static X* from_ref(X& x) { return &x; }
+        static X& to_ref(X* x) { return *x; }
+        static X& move(X& x) { return x; }
+    };
+
     struct ctor_tag {};
 } // namespace detail
 
@@ -107,10 +124,10 @@ class either: public detail::either_data<A, B> {
     template <std::size_t I>
     const typename getter<I>::type& field() const { return getter<I>::field(*this); }
 
-    unsigned char which;
+    signed char which;
 
 public:
-    static constexpr char either_npos=-1;
+    static constexpr signed char either_npos=-1;
 
     // Can default construct if A or B is; try A first.
     template <
@@ -193,10 +210,10 @@ public:
     {
         switch (which) {
         case 0:
-            getter<0>::field(*this).construct(std::move(x.unsafe_get<0>()));
+            getter<0>::field(*this).construct(detail::ref_adaptor<A>::move(x.unsafe_get<0>()));
             break;
         case 1:
-            getter<1>::field(*this).construct(std::move(x.unsafe_get<1>()));
+            getter<1>::field(*this).construct(detail::ref_adaptor<B>::move(x.unsafe_get<1>()));
             break;
         }
     }
@@ -205,13 +222,13 @@ public:
     either& operator=(const either& x) {
         if (which==0) {
             if (x.which==0) {
-                unsafe_get<0>()=x.unsafe_get<0>();
+                getter<0>::field(*this).assign(x.unsafe_get<0>());
             }
             else if (x.which==1) {
-                B b_tmp(x.unsafe_get<1>());
+                auto b_tmp = detail::ref_adaptor<B>::from_ref(x.unsafe_get<1>());
                 field<0>().destruct();
                 which=(char)either_npos;
-                field<1>().construct(std::move(b_tmp));
+                field<1>().construct(detail::ref_adaptor<B>::to_ref(std::move(b_tmp)));
                 which=1;
             }
             else {
@@ -221,14 +238,14 @@ public:
         }
         else if (which==1) {
             if (x.which==0) {
-                A a_tmp(x.unsafe_get<0>());
+                auto a_tmp = detail::ref_adaptor<A>::from_ref(x.unsafe_get<0>());
                 field<1>().destruct();
                 which=(char)either_npos;
-                field<0>().construct(std::move(a_tmp));
+                field<0>().construct(detail::ref_adaptor<A>::to_ref(std::move(a_tmp)));
                 which=0;
             }
             else if (which==1) {
-                unsafe_get<1>()=x.unsafe_get<1>();
+                getter<1>::field(*this).assign(x.unsafe_get<1>());
             }
             else {
                 field<1>().destruct();
@@ -237,10 +254,12 @@ public:
         }
         else {
             if (x.which==0) {
-                unsafe_get<0>()=x.unsafe_get<0>();
+                getter<0>::field(*this).assign(x.unsafe_get<0>());
+                which=0;
             }
-            else {
-                unsafe_get<1>()=x.unsafe_get<1>();
+            else if (x.which==1) {
+                getter<1>::field(*this).assign(x.unsafe_get<1>());
+                which=1;
             }
         }
         return *this;
@@ -250,12 +269,12 @@ public:
     either& operator=(either&& x) {
         if (which==0) {
             if (x.which==0) {
-                unsafe_get<0>()=std::move(x.unsafe_get<0>());
+                getter<0>::field(*this).assign(std::move(x.unsafe_get<0>()));
             }
             else if (x.which==1) {
                 which=(char)either_npos;
                 field<0>().destruct();
-                field<1>().construct(std::move(x.unsafe_get<1>()));
+                field<1>().construct(detail::ref_adaptor<B>::move(x.unsafe_get<1>()));
                 which=1;
             }
             else {
@@ -267,11 +286,11 @@ public:
             if (x.which==0) {
                 which=(char)either_npos;
                 field<1>().destruct();
-                field<0>().construct(std::move(x.unsafe_get<0>()));
+                field<0>().construct(detail::ref_adaptor<A>::move(x.unsafe_get<0>()));
                 which=0;
             }
             else if (x.which==1) {
-                unsafe_get<1>()=std::move(x.unsafe_get<1>());
+                getter<1>::field(*this).assign(std::move(x.unsafe_get<1>()));
             }
             else {
                 which=(char)either_npos;
@@ -280,10 +299,12 @@ public:
         }
         else {
             if (x.which==0) {
-                field<0>().construct(std::move(x.unsafe_get<0>()));
+                field<0>().construct(detail::ref_adaptor<A>::move(x.unsafe_get<0>()));
+                which=0;
             }
-            else {
-                field<1>().construct(std::move(x.unsafe_get<1>()));
+            else if (x.which==1) {
+                field<1>().construct(detail::ref_adaptor<B>::move(x.unsafe_get<1>()));
+                which=1;
             }
         }
         return *this;
@@ -371,6 +392,6 @@ public:
     }
 };
 
-}} // namespace hf::optionalm
+} // namespace hf
 
 #endif // ndef HF_EITHER_H_

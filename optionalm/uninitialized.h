@@ -14,7 +14,6 @@
  */
 
 namespace hf {
-namespace optionalm {
 
 template <typename X>
 struct uninitialized {
@@ -44,6 +43,10 @@ public:
     // General constructor
     template <typename... Y,typename =typename std::enable_if<std::is_constructible<X,Y...>::value>::type>
     void construct(Y&& ...args) { new(&data) X(std::forward<Y>(args)...); }
+
+    // Assign the value (precondition: value already constructed).
+    void assign(const X& x) { ref()=x; }
+    void assign(X&& x) { ref()=std::move(x); }
 
     // Call the destructor of the value.
     void destruct() { ptr()->~X(); }
@@ -79,6 +82,10 @@ public:
 
     // Set the reference data.
     void construct(X &x) { data=&x; }
+
+    // Reassign the reference; explicitly allow const breaking.
+    void assign(const X& x) { data=const_cast<X*>(&x); }
+
     // Destruct is a NOP for reference data.
     void destruct() {}
 
@@ -111,22 +118,7 @@ struct uninitialized<void> {
     typename std::result_of<F()>::type apply(F &&f) const { return f(); }
 };
 
-#if 0
-template <typename...>
-struct uninitialized_can_construct: std::false_type {};
-
-template <typename X,typename... Y>
-struct uninitialized_can_construct<X,Y...>: std::integral_constant<bool,std::is_constructible<X,Y...>::value> {};
-
-template <typename X,typename Y>
-struct uninitialized_can_construct<X &,Y>: std::integral_constant<bool,std::is_convertible<X &,Y>::value> {};
-
-template <typename... Y>
-struct uninitialized_can_construct<void,Y...>: std::true_type {};
-#endif
-
-
-}} // namespace hf::optionalm
+} // namespace hf
 
 #endif // ndef HF_UNINITIALIZED_H_
 

@@ -28,7 +28,6 @@
 #pragma clang diagnostic ignored "-Wnull-conversion"
 
 namespace hf {
-namespace optionalm {
 
 template <typename X> struct optional;
 
@@ -65,7 +64,7 @@ namespace detail {
         template <typename Y> friend struct optional;
 
     protected:
-        typedef hf::optionalm::uninitialized<X> D;
+        typedef hf::uninitialized<X> D;
 
     public:
         typedef typename D::reference reference;
@@ -326,7 +325,7 @@ inline optional<void> provided(bool condition) { return condition? optional<void
 template <typename X>
 optional<X> just(X&& x) { return optional<X>(std::forward<X>(x)); }
 
-}} // namespace hf::optionalm
+} // namespace hf
 
 #pragma clang diagnostic pop
 

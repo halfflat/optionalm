@@ -7,7 +7,7 @@
 
 #include "test_common.h"
 
-using namespace hf::optionalm;
+using namespace hf;
 
 TEST(optional, ctors) {
     optional<int> a, b(3), c=b, d=4;

@@ -4,7 +4,7 @@
 
 #include "test_common.h"
 
-using namespace hf::optionalm;
+using namespace hf;
 
 TEST(uninitialized, ctor) {
     using count=testing::ctor_count<char>;
@@ -56,7 +56,7 @@ TEST(uninitialized, ctor_nomove) {
     no_move b;
     ua.construct(b); // check against non-const lvalue
 
-    const no_move c;
+    const no_move c{1};
     ua.construct(c); // check against const lvalue
 
     EXPECT_EQ(3, no_move::copy_ctor_count);
